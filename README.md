@@ -4,70 +4,30 @@ Install go version >= 1.24
 https://go.dev/doc/install
 ```
 
-## Project setup
-```bash
-# using go install
-go install github.com/air-verse/air@v1.61.7
-go install github.com/swaggo/swag/cmd/swag@v1.16.4
-go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.64.6
-go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@v4.18.2
-go mod download
-# generate swagger
-swag init --parseDependency -g ./main.go
-
-# or
-
-# using make
-make setup
-```
-
-## Compile and run the project
+## Setup Project
 
 ```bash
-# using go run
-go run main.go
+# project ini dijalankan menggunakan docker compose, service dan database sudah otomatis berjalan
 
-# or
+make docker-up
 
-# using make
-make run
+# atau
+
+docker compose up --build
 ```
 
-## Run tests
-
+## Import Collection
 ```bash
-go run test
+# project ini menggunakan aplikasi insomnia untuk pengujian api
+# import file Insomnia.yaml yang ada didalam folder project
 ```
+![Image](https://github.com/user-attachments/assets/e081997c-dc9a-42b9-a11e-47b2d31ece45)
 
-## Migrations
-Create a migration file
+
+## API Documentation
 ```bash
-# using migration cli
-migrate create -ext sql -dir db/migrations/ -seq customer
+# project ini menggunakan swagger untuk api documentation, silahkan akses 
 
-# or
-
-# using make
-make migrate-up
+http://localhost:8080/swagger/index.html
 ```
-
-Apply migrations
-```bash
-# using migration cli
-migrate -path db/migrations/ -database 'postgres://postgres:password@localhost:5432/dbo?sslmode=disable' -verbose up
-
-# or
-
-# using make
-make migrate-down
-```
-
-Rollback migrations
-```bash
-migrate -path db/migrations/ -database 'postgres://postgres:password@localhost:5432/dbo?sslmode=disable' -verbose down
-```
-
-## Access URL
-```bash
-http://localhost:8080
-```
+![Image](https://github.com/user-attachments/assets/f049a66b-de07-46a8-a72a-7d0af26f7249)
