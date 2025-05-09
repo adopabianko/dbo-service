@@ -1,0 +1,46 @@
+services:
+  db-postgres:
+    container_name: dbo-postgres
+    image: postgres:17
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      PGDATA: /data/postgres
+      POSTGRES_DB: dbo
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - dbo-network
+  dbo-service:
+    container_name: dbo-dbo-service
+    build:
+      dockerfile: ./Dockerfile
+    ports:
+      - "8080:8080"
+    networks:
+      - dbo-network
+    depends_on:
+      db-postgres:
+        condition: service_healthy
+  db-migrations:
+    container_name: dbo-db-migrations
+    image: migrate/migrate
+    depends_on:
+      db-postgres:
+        condition: service_healthy
+    volumes:
+      - ./db/migrations:/dbo-migrations
+    entrypoint: >
+      sh -c "
+        migrate -path dbo-migrations -database 'postgres://postgres:password@db-postgres:5432/dbo?sslmode=disable' up
+      "
+    networks:
+      - dbo-network
+
+networks:
+  dbo-network: {}

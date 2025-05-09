@@ -32,3 +32,12 @@ migrate-up:
 .PHONY: migrate-down
 migrate-down:
 	@`go env GOPATH`/bin/migrate -path db/migrations/ -database $(DB_URL_MIGRATION) -verbose down
+
+.PHONY: docker-up
+docker-up:
+	cp -R .env.example .env
+	docker compose up --build
+
+.PHONY: docker-down
+docker-down:
+	docker compose down --rmi all -v --remove-orphans
