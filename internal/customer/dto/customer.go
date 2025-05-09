@@ -39,3 +39,7 @@ type UpdateCustomerRequest struct {
 	UpdatedAt time.Time
 	UpdatedBy string `json:"updated_by"`
 }
+
+type Response struct {
+	ID string `json:"id"`
+}

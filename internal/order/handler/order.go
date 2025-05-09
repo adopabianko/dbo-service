@@ -3,17 +3,18 @@ package handler
 import (
 	"net/http"
 	"strconv"
+	"time"
 
-	"github.com/adopabianko/dbo-service/internal/customer/dto"
+	"github.com/adopabianko/dbo-service/internal/order/dto"
 	"github.com/adopabianko/dbo-service/pkg/http/response"
 	"github.com/adopabianko/dbo-service/pkg/stacktrace"
 
 	"github.com/gin-gonic/gin"
 )
 
-// @Tags Customer
-// @Summary Find All Customer
-// @Description API for find all customer
+// @Tags Order
+// @Summary Find All Order
+// @Description API for find all order
 // @Accept json
 // @Produce json
 // @Param page query int false "Page" default(1)
@@ -23,9 +24,9 @@ import (
 // @Param type query string false "Type"
 // @Success 200 {object} response.SuccessResponse
 // @Failure 500 {object} response.ErrorResponse
-// @Router /customer [get]
+// @Router /order [get]
 func (h *handler) FindAll(ctx *gin.Context) {
-	var params dto.CustomerListRequest
+	var params dto.OrderListRequest
 
 	// Get query parameters
 	params.Page, _ = strconv.Atoi(ctx.DefaultQuery("page", "1"))
@@ -39,7 +40,7 @@ func (h *handler) FindAll(ctx *gin.Context) {
 		response.ResponseFailed(
 			ctx,
 			stacktrace.WrapWithCode(err, stacktrace.GetCode(err), "FindAll"),
-			"failed to fetch customers",
+			"failed to fetch orders",
 		)
 		return
 	}
@@ -47,59 +48,59 @@ func (h *handler) FindAll(ctx *gin.Context) {
 	response.ResponseSuccess(
 		ctx,
 		http.StatusOK,
-		"fetched all customers successfully",
+		"fetched all orders successfully",
 		result.Data,
 		result.Meta,
 	)
 }
 
-// @Tags Customer
-// @Summary Get Customer Detail By UUID
-// @Description API for get customer detail by uuid
+// @Tags Order
+// @Summary Get Order Detail By UUID
+// @Description API for get order detail by uuid
 // @Produce json
-// @Param uuid path string true "customer uuid"
-// @Success 200 {object} response.SuccessResponse{data=entity.Customer}
+// @Param uuid path string true "order uuid"
+// @Success 200 {object} response.SuccessResponse{data=entity.Order}
 // @Failure 404 {object} response.ErrorResponse
 // @Failure 500 {object} response.ErrorResponse
-// @Router /customer/{uuid} [get]
+// @Router /order/{uuid} [get]
 func (h *handler) FindByID(ctx *gin.Context) {
 	id := ctx.Param("id")
-	customer, err := h.service.FindByID(ctx, id)
+	order, err := h.service.FindByID(ctx, id)
 	if err != nil {
 		response.ResponseFailed(
 			ctx,
 			stacktrace.WrapWithCode(err, stacktrace.GetCode(err), "FindByID"),
-			"failed to fetch customer",
+			"failed to fetch order",
 		)
 		return
 	}
 
 	response.ResponseSuccess(
 		ctx, http.StatusOK,
-		"fetched customer successfully",
-		customer,
+		"fetched order successfully",
+		order,
 		nil,
 	)
 }
 
-// @Tags Customer
-// @Summary Create Customer
-// @Description API for create customer
+// @Tags Order
+// @Summary Create Order
+// @Description API for create order
 // @Accept json
 // @Produce json
-// @Param payload body dto.CreateCustomerRequest true "Payload Create Customer"
+// @Param payload body dto.CreateOrderRequest true "Payload Create Order"
 // @Success 200 {object} response.SuccessResponse
 // @Failure 400 {object} response.ErrorResponse
 // @Failure 409 {object} response.ErrorResponse
 // @Failure 500 {object} response.ErrorResponse
-// @Router /customer [post]
+// @Router /order [post]
 func (h *handler) Create(ctx *gin.Context) {
-	var customer dto.CreateCustomerRequest
-	if err := ctx.ShouldBindJSON(&customer); err != nil {
+	var order dto.CreateOrderRequest
+	if err := ctx.ShouldBindJSON(&order); err != nil {
 		response.ResponseFailed(
 			ctx,
 			stacktrace.WrapWithCode(err, http.StatusBadRequest, "Create"),
-			"failed to create customer",
+			"failed to create order",
 		)
 		return
 	}
@@ -107,14 +108,14 @@ func (h *handler) Create(ctx *gin.Context) {
 	// get email from token
 	email, _ := ctx.Get("email")
 
-	customer.CreatedBy = email.(string)
+	order.CreatedBy = email.(string)
 
-	id, err := h.service.Create(ctx, customer)
+	orderID, err := h.service.Create(ctx, order)
 	if err != nil {
 		response.ResponseFailed(
 			ctx,
 			stacktrace.WrapWithCode(err, stacktrace.GetCode(err), "Create"),
-			"failed to create customer",
+			"failed to create order",
 		)
 		return
 	}
@@ -122,33 +123,31 @@ func (h *handler) Create(ctx *gin.Context) {
 	response.ResponseSuccess(
 		ctx,
 		http.StatusCreated,
-		"customer created successfully",
-		gin.H{
-			"id": id,
-		},
+		"order created successfully",
+		orderID,
 		nil,
 	)
 }
 
-// @Tags Customer
-// @Summary Create Customer
-// @Description API for create customer
+// @Tags Order
+// @Summary Create Order
+// @Description API for create order
 // @Accept json
 // @Produce json
-// @Param uuid path string true "customer uuid"
-// @Param payload body dto.UpdateCustomerRequest true "Payload Update Customer"
+// @Param uuid path string true "order uuid"
+// @Param payload body dto.UpdateOrderRequest true "Payload Update Order"
 // @Success 200 {object} response.SuccessResponse
 // @Failure 400 {object} response.ErrorResponse
 // @Failure 409 {object} response.ErrorResponse
 // @Failure 500 {object} response.ErrorResponse
-// @Router /customer/{uuid} [patch]
+// @Router /order/{uuid} [patch]
 func (h *handler) Update(ctx *gin.Context) {
-	var customer dto.UpdateCustomerRequest
-	if err := ctx.ShouldBindJSON(&customer); err != nil {
+	var order dto.UpdateOrderRequest
+	if err := ctx.ShouldBindJSON(&order); err != nil {
 		response.ResponseFailed(
 			ctx,
 			stacktrace.WrapWithCode(err, stacktrace.GetCode(err), "Update"),
-			"failed to update customer",
+			"failed to update order",
 		)
 		return
 	}
@@ -156,15 +155,16 @@ func (h *handler) Update(ctx *gin.Context) {
 	// get email from token
 	email, _ := ctx.Get("email")
 
-	customer.ID = ctx.Param("id")
-	customer.UpdatedBy = email.(string)
+	order.ID = ctx.Param("id")
+	order.UpdatedAt = time.Now()
+	order.UpdatedBy = email.(string)
 
-	id, err := h.service.Update(ctx, customer)
+	orderID, err := h.service.Update(ctx, order)
 	if err != nil {
 		response.ResponseFailed(
 			ctx,
 			stacktrace.WrapWithCode(err, stacktrace.GetCode(err), "Update"),
-			"failed to update customer",
+			"failed to update order",
 		)
 		return
 	}
@@ -172,25 +172,22 @@ func (h *handler) Update(ctx *gin.Context) {
 	response.ResponseSuccess(
 		ctx,
 		http.StatusOK,
-		"customer updated successfully",
-		gin.H{
-			"id": id,
-		},
+		"order updated successfully",
+		orderID,
 		nil,
 	)
 }
 
-// @Tags Customer
-// @Summary Delete Customer
-// @Description API for delete customer
+// @Tags Order
+// @Summary Delete Order
+// @Description API for delete order
 // @Produce json
-// @Param uuid path string true "customer uuid"
+// @Param uuid path string true "order uuid"
 // @Success 200 {object} response.SuccessResponse
 // @Failure 404 {object} response.ErrorResponse
 // @Failure 500 {object} response.ErrorResponse
-// @Router /customer/{uuid} [delete]
-func (h *handler) Delete(ctx *gin.Context) {
-	// get email from token
+// @Router /order/{uuid} [delete]
+func (h *handler) Delete(ctx *gin.Context) { // get email from token
 	email, _ := ctx.Get("email")
 	id := ctx.Param("id")
 	err := h.service.Delete(ctx, email.(string), id)
@@ -198,7 +195,7 @@ func (h *handler) Delete(ctx *gin.Context) {
 		response.ResponseFailed(
 			ctx,
 			stacktrace.WrapWithCode(err, stacktrace.GetCode(err), "Delete"),
-			"failed to delete customer",
+			"failed to delete order",
 		)
 		return
 	}
@@ -206,7 +203,7 @@ func (h *handler) Delete(ctx *gin.Context) {
 	response.ResponseSuccess(
 		ctx,
 		http.StatusOK,
-		"customer deleted successfully",
+		"order deleted successfully",
 		nil,
 		nil,
 	)

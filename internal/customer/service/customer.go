@@ -39,41 +39,43 @@ func (s *service) FindByID(ctx context.Context, id string) (entity.Customer, err
 	return s.repository.FindByID(ctx, id)
 }
 
-func (s *service) Create(ctx context.Context, params dto.CreateCustomerRequest) (entity.Customer, error) {
-	var opt entity.Customer
+func (s *service) Create(ctx context.Context, params dto.CreateCustomerRequest) (dto.Response, error) {
+	var customer entity.Customer
 
-	opt.Name = params.Name
-	opt.Phone = params.Phone
-	opt.Email = params.Email
-	opt.Gender = params.Gender
-	opt.Address = params.Address
-	opt.CreatedBy = params.CreatedBy
+	customer.Name = params.Name
+	customer.Phone = params.Phone
+	customer.Email = params.Email
+	customer.Gender = params.Gender
+	customer.Address = params.Address
+	customer.CreatedBy = params.CreatedBy
 
-	return s.repository.Create(ctx, opt)
+	create, err := s.repository.Create(ctx, customer)
+	if err != nil {
+		return dto.Response{}, err
+	}
+	return dto.Response{ID: create.ID}, nil
 }
 
-func (s *service) Update(ctx context.Context, params dto.UpdateCustomerRequest) (entity.Customer, error) {
-	opt, err := s.repository.FindByID(ctx, params.ID)
+func (s *service) Update(ctx context.Context, params dto.UpdateCustomerRequest) (dto.Response, error) {
+	customer, err := s.repository.FindByID(ctx, params.ID)
 	if err != nil {
-		return entity.Customer{}, err
+		return dto.Response{}, err
 	}
 
-	opt.Name = params.Name
-	opt.Phone = params.Phone
-	opt.Email = params.Email
-	opt.Gender = params.Gender
-	opt.Address = params.Address
-	opt.UpdatedAt = &params.UpdatedAt
-	opt.UpdatedBy = &params.UpdatedBy
+	customer.Name = params.Name
+	customer.Phone = params.Phone
+	customer.Email = params.Email
+	customer.Gender = params.Gender
+	customer.Address = params.Address
+	customer.UpdatedBy = &params.UpdatedBy
 
-	return s.repository.Update(ctx, opt)
+	update, err := s.repository.Update(ctx, customer)
+	if err != nil {
+		return dto.Response{}, err
+	}
+	return dto.Response{ID: update.ID}, nil
 }
 
-func (s *service) Delete(ctx context.Context, id string) error {
-	_, err := s.repository.FindByID(ctx, id)
-	if err != nil {
-		return err
-	}
-
-	return s.repository.Delete(ctx, id)
+func (s *service) Delete(ctx context.Context, email, id string) error {
+	return s.repository.Delete(ctx, email, id)
 }

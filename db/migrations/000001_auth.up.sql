@@ -10,6 +10,8 @@ create table if not exists auth (
 	constraint auth_email_unique unique (email)
 );
 
+
+
 -- email = 'admin@dbo.id'
 -- password = 'dboadmin'
 insert into auth (created_at, created_by, email, password) values (now(), 'system', 'admin@dbo.id', '$2a$10$UM6IEWjIUHgs1gcR3xDT0eOXttTdXPA0Om7tu12bc3loToGbfjyZe');

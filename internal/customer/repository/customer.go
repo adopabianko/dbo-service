@@ -26,7 +26,7 @@ func (r *repository) FindAll(ctx context.Context, params dto.CustomerListRequest
             updated_at,
             updated_by
         FROM customer
-        WHERE 1=1`
+        WHERE deleted_at IS NULL`
 
 	if params.Search != "" {
 		query += fmt.Sprintf(` AND (name ILIKE '%s' OR phone ILIKE '%s' OR email ILIKE '%s')`, "%"+params.Search+"%", "%"+params.Search+"%", "%"+params.Search+"%")
@@ -69,7 +69,7 @@ func (r *repository) FindByID(ctx context.Context, ID string) (entity.Customer, 
 		created_by,
 		updated_at,
 		updated_by
-	FROM customer WHERE id = $1`, ID).Scan(
+	FROM customer WHERE deleted_at IS NULL AND id = $1`, ID).Scan(
 		&opt.ID, &opt.Name, &opt.Phone, &opt.Email, &opt.Gender, &opt.Address,
 		&opt.CreatedAt, &opt.CreatedBy, &opt.UpdatedAt, &opt.UpdatedBy,
 	)
@@ -86,14 +86,13 @@ func (r *repository) Create(ctx context.Context, customer entity.Customer) (enti
 	query := `
 	INSERT INTO customer (name, phone, email, gender, address, created_by)
 	VALUES ($1, $2, $3, $4, $5, $6)
-	RETURNING id, name, phone, email, gender, address, created_at, created_by`
+	RETURNING id`
 
 	err := r.db.QueryRow(ctx, query,
 		customer.Name, customer.Phone, customer.Email, customer.Gender, customer.Address,
 		customer.CreatedBy,
 	).Scan(
-		&customer.ID, &customer.Name, &customer.Phone, &customer.Email, &customer.Gender, &customer.Address,
-		&customer.CreatedAt, &customer.CreatedBy,
+		&customer.ID,
 	)
 
 	if err != nil {
@@ -109,17 +108,15 @@ func (r *repository) Create(ctx context.Context, customer entity.Customer) (enti
 func (r *repository) Update(ctx context.Context, customer entity.Customer) (entity.Customer, error) {
 	query := `
         UPDATE customer
-        SET name = $1, phone = $2, email = $3, gender = $4, address = $5, updated_at = $6, updated_by = $7
-        WHERE id = $8
-        RETURNING id, name, phone, email, gender, address, created_at, created_by, updated_at, updated_by`
+        SET name = $1, phone = $2, email = $3, gender = $4, address = $5, updated_at = now(), updated_by = $6
+        WHERE id = $7
+        RETURNING id`
 
 	err := r.db.QueryRow(ctx, query,
 		customer.Name, customer.Phone, customer.Email, customer.Gender, customer.Address,
-		customer.UpdatedAt, customer.UpdatedBy, customer.ID,
+		customer.UpdatedBy, customer.ID,
 	).Scan(
-		&customer.ID, &customer.Name, &customer.Phone, &customer.Email, &customer.Gender, &customer.Address,
-		&customer.CreatedAt, &customer.CreatedBy,
-		&customer.UpdatedAt, &customer.UpdatedBy,
+		&customer.ID,
 	)
 
 	if err != nil {
@@ -132,9 +129,10 @@ func (r *repository) Update(ctx context.Context, customer entity.Customer) (enti
 	return customer, nil
 }
 
-func (r *repository) Delete(ctx context.Context, ID string) error {
-	query := `DELETE FROM customer WHERE id = $1`
-	_, err := r.db.Exec(ctx, query, ID)
+func (r *repository) Delete(ctx context.Context, email, ID string) error {
+	_, err := r.db.Exec(ctx, `UPDATE customer set deleted_at = now(), deleted_by = $1 WHERE id = $2`,
+		email, ID,
+	)
 	if err != nil {
 		if strings.Contains(err.Error(), "no rows in result set") {
 			return stacktrace.WrapWithCode(err, http.StatusNotFound, "customer not found")

@@ -21,6 +21,9 @@ import (
 	customerHandler "github.com/adopabianko/dbo-service/internal/customer/handler"
 	customerRepository "github.com/adopabianko/dbo-service/internal/customer/repository"
 	customerService "github.com/adopabianko/dbo-service/internal/customer/service"
+	orderHandler "github.com/adopabianko/dbo-service/internal/order/handler"
+	orderRepository "github.com/adopabianko/dbo-service/internal/order/repository"
+	orderService "github.com/adopabianko/dbo-service/internal/order/service"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
@@ -52,6 +55,11 @@ func StartHTTPServer() {
 		customerRepository customerRepository.ICustomerRepository = customerRepository.NewRepository(db)
 		customerService    customerService.ICustomerService       = customerService.NewService(customerRepository)
 		customerHandler    customerHandler.ICustomerHandler       = customerHandler.NewHandler(customerService)
+
+		// Order Module
+		orderRepository orderRepository.IOrderRepository = orderRepository.NewRepository(db)
+		orderService    orderService.IOrderService       = orderService.NewService(orderRepository, customerRepository)
+		orderHandler    orderHandler.IOrderHandler       = orderHandler.NewHandler(orderService)
 	)
 
 	// router
@@ -59,6 +67,7 @@ func StartHTTPServer() {
 	router.Swagger(server)
 	router.Auth(server, authHandler)
 	router.Customer(server, customerHandler)
+	router.Order(server, orderHandler)
 
 	srv := &http.Server{
 		Addr:    fmt.Sprintf(":%d", cfg.App.Port),

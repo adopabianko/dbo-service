@@ -12,6 +12,8 @@ create table if not exists customer (
   	created_by varchar(50) not null,
   	updated_at timestamp null,
   	updated_by varchar(50) null,
+	deleted_at timestamp null,
+  	deleted_by varchar(50) null,
 	"name" varchar(150) not null,
 	phone varchar(16) not null,
 	email varchar(150) not null,

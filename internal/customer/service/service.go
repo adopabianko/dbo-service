@@ -12,9 +12,9 @@ type (
 	ICustomerService interface {
 		FindAll(ctx context.Context, params dto.CustomerListRequest) (dto.CustomerListResponse, error)
 		FindByID(ctx context.Context, id string) (entity.Customer, error)
-		Create(ctx context.Context, params dto.CreateCustomerRequest) (entity.Customer, error)
-		Update(ctx context.Context, params dto.UpdateCustomerRequest) (entity.Customer, error)
-		Delete(ctx context.Context, id string) error
+		Create(ctx context.Context, params dto.CreateCustomerRequest) (dto.Response, error)
+		Update(ctx context.Context, params dto.UpdateCustomerRequest) (dto.Response, error)
+		Delete(ctx context.Context, email, id string) error
 	}
 
 	service struct {
